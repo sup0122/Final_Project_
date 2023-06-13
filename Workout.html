@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>AJAX GET Request Example</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.0/milligram.min.css">
+    <style>
+        body {
+            margin: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .muscle-select {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .exercise-select {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .exercise-list {
+            margin-bottom: 30px;
+        }
+        
+        .exercise-item {
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        .exercise-info {
+            background-color: #f1f1f1;
+            border-radius: 4px;
+            padding: 20px;
+        }
+        
+        .exercise-info h2 {
+            margin-top: 0;
+        }
+        
+        .exercise-info p {
+            margin-bottom: 10px;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var selectedMuscle = '';
+            var exercisesByDifficulty = {};
+
+            $('#muscle-select').change(function() {
+                selectedMuscle = $(this).val();
+                retrieveExercisesByMuscle(selectedMuscle);
+            });
+
+            function retrieveExercisesByMuscle(muscle) {
+                var url = 'https://api.api-ninjas.com/v1/exercises?muscle=' + muscle;
+
+                $.ajax({
+                    method: 'GET',
+                    url: url,
+                    headers: {
+                        'X-Api-Key': 'H+mIK6SwhQcpUfIC4T8UGA==A92eKDz66ACqFouX'
+                    },
+                    contentType: 'application/json',
+                    success: function(result) {
+                        console.log(result);
+                        categorizeExercises(result);
+                    },
+                    error: function(jqXHR) {
+                        console.error('Error: ', jqXHR.responseText);
+                    }
+                });
+            }
+
+            function categorizeExercises(data) {
+                exercisesByDifficulty = {};
+
+                for (var i = 0; i < data.length; i++) {
+                    var exercise = data[i];
+                    var exerciseDifficulty = exercise.difficulty;
+
+                    if (!exercisesByDifficulty[exerciseDifficulty]) {
+                        exercisesByDifficulty[exerciseDifficulty] = [];
+                    }
+
+                    exercisesByDifficulty[exerciseDifficulty].push(exercise);
+                }
+
+                displayDifficultySelector();
+            }
+
+            function displayDifficultySelector() {
+                var selectDiv = $('#select');
+                selectDiv.empty();
+
+                var selectElement = $('<select id="difficulty-select">');
+
+                for (var difficulty in exercisesByDifficulty) {
+                    var option = $('<option>')
+                        .text(difficulty)
+                        .val(difficulty);
+
+                    selectElement.append(option);
+                }
+
+                selectDiv.append(selectElement);
+
+                $('#difficulty-select').change(function() {
+                    var selectedDifficulty = $(this).val();
+                    displayExercisesByDifficulty(selectedDifficulty);
+                });
+            }
+
+            function displayExercisesByDifficulty(difficulty) {
+                var exercises = exercisesByDifficulty[difficulty];
+
+                var exerciseSelectDiv = $('#exercise-select');
+                exerciseSelectDiv.empty();
+
+                var exerciseSelectElement = $('<select id="exercise-dropdown">');
+
+                for (var i = 0; i < exercises.length; i++) {
+                    var exercise = exercises[i];
+                    var exerciseName = exercise.name;
+
+                    var option = $('<option>')
+                        .text(exerciseName)
+                        .val(i);
+
+                    exerciseSelectElement.append(option);
+                }
+
+                exerciseSelectDiv.append(exerciseSelectElement);
+
+                $('#exercise-dropdown').change(function() {
+                    var selectedExerciseIndex = $(this).val();
+                    var selectedExercise = exercises[selectedExerciseIndex];
+                    displayExerciseInfo(selectedExercise);
+                });
+            }
+
+            function displayExerciseInfo(exercise) {
+                var exerciseInfoDiv = $('#exercise-info');
+                exerciseInfoDiv.empty();
+
+                var exerciseName = exercise.name;
+                var exerciseType = exercise.type;
+                var exerciseMuscle = exercise.muscle;
+                var exerciseEquipment = exercise.equipment;
+                var exerciseInstructions = exercise.instructions;
+
+                var exerciseElement = $('<div class="exercise-info">');
+                exerciseElement.append('<h2>' + exerciseName + '</h2>');
+                exerciseElement.append('<p><strong>Type:</strong> ' + exerciseType + '</p>');
+                exerciseElement.append('<p><strong>Muscle:</strong> ' + exerciseMuscle + '</p>');
+                exerciseElement.append('<p><strong>Equipment:</strong> ' + exerciseEquipment + '</p>');
+                exerciseElement.append('<p><strong>Instructions:</strong> ' + exerciseInstructions + '</p>');
+
+                exerciseInfoDiv.append(exerciseElement);
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <h1>Workouts</h1>
+
+    <div class="muscle-select">
+        <label for="muscle-select">Select a Muscle:</label>
+        <select id="muscle-select">
+            <option value="">-- Select --</option>
+            <option value="abdominals">Abdominals</option>
+            <option value="abductors">Abductors</option>
+            <option value="adductors">Adductors</option>
+            <option value="biceps">Biceps</option>
+            <option value="calves">Calves</option>
+            <option value="chest">Chest</option>
+            <option value="forearms">Forearms</option>
+            <option value="glutes">Glutes</option>
+            <option value="hamstrings">Hamstrings</option>
+            <option value="lats">Lats</option>
+            <option value="lower_back">Lower Back</option>
+            <option value="middle_back">Middle Back</option>
+            <option value="neck">Neck</option>
+            <option value="quadriceps">Quadriceps</option>
+            <option value="traps">Traps</option>
+            <option value="triceps">Triceps</option>
+        </select>
+    </div>
+
+    <div class="exercise-select" id="select"></div>
+
+    <div class="exercise-select" id="exercise-select"></div>
+
+    <div id="exercise-info"></div>
+</body>
+
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie Calculator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: none;
+            text-align: center;
+        }
+        
+        .card-body {
+            padding: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        .btn-calculate {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .result-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .result-container h4 {
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container my-5">
+        <div class="card">
+            <div class="card-header">
+                <h5>Calorie Calculator</h5>
+            </div>
+            <div class="card-body">
+                <form>
+                    <div class="form-group">
+                        <label for="age">Age*</label>
+                        <input type="number" class="form-control" id="age" required value="25">
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender*</label>
+                        <select class="form-control" id="gender" required>
+              <option value="0">Male</option>
+              <option value="1">Female</option>
+            </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bodyFat">Body Fat (%)*</label>
+                        <input type="number" class="form-control" id="bodyFat" required value="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="height">Height (cm)*</label>
+                        <input type="number" class="form-control" id="height" required value="180">
+                    </div>
+                    <div class="form-group">
+                        <label for="weight">Weight (kg)*</label>
+                        <input type="number" class="form-control" id="weight" required value="65">
+                    </div>
+                    <div class="form-group">
+                        <label for="activity">Activity*</label>
+                        <select class="form-control" id="activity" required>
+              <option value="1">Basal Metabolic Rate (BMR)</option>
+              <option value="1.2">Sedentary: little or no exercise</option>
+              <option selected value="1.465">Moderate: exercise 4-5 times/week</option>
+              <option value="1.55">Active: daily exercise or intense exercise 3-4 times/week</option>
+              <option value="1.725">Very Active: intense exercise 6-7 times/week</option>
+              <option value="1.9">Extra Active: very intense exercise daily, or physical job</option>
+            </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="unit">Result Unit*</label>
+                        <select class="form-control" id="unit" required>
+              <option value="calories">Calories</option>
+              <option value="kilojoules">Kilojoules</option>
+            </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="formula">BMR estimation formula*</label>
+                        <select class="form-control" id="formula" required>
+              <option value="0">Mifflin St Jeor</option>
+              <option value="1">Revised Harris-Benedict</option>
+              <option value="2">Katch-McArdle</option>
+            </select>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <button class="btn-calculate" onclick="calculateCalorie()">Calculate</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="result-container">
+        <h4 id="result" class="text-success"></h4>
+    </div>
+
+    <script>
+        function calculateCalorie() {
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const bodyFat = document.getElementById('bodyFat').value;
+            const height = document.getElementById('height').value;
+            const weight = document.getElementById('weight').value;
+            const activity = document.getElementById('activity').value;
+            const unit = document.getElementById('unit').value;
+            const formula = document.getElementById('formula').value;
+
+            let BMR = '';
+            if (formula == 0) { //Mifflin
+                BMR = Mifflin(gender, age, bodyFat, height, weight);
+            } else if (formula == 1) { //Harris
+                BMR = Harris(gender, age, bodyFat, height, weight);
+            } else if (formula == 2) { //Katch
+                BMR = Katch(bodyFat, weight);
+            }
+
+            let ret = parseFloat(BMR) * parseFloat(activity);
+            if (unit == 'kilojoules') {
+                ret = ret * 4.1868;
+            }
+
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = `You should consume ${Math.ceil(ret)} ${unit}/day to maintain your weight.`;
+        }
+
+        function Mifflin(gender, age, bodyFat, height, weight) {
+            let BMR = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+            if (gender == 1) {
+                BMR = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+            }
+            return BMR;
+        }
+
+        function Harris(gender, age, bodyFat, height, weight) {
+            let BMR = (13.397 * weight) + (4.799 * height) - (5.677 * age) + 88.362;
+            if (gender == 1) {
+                BMR = (9.427 * weight) + (3.098 * height) - (4.330 * age) + 447.593;
+            }
+            return BMR;
+        }
+
+        function Katch(bodyFat, weight) {
+            let BMR = 370 + 21.6 * (1 - (bodyFat / 100)) * weight;
+            return BMR;
+        }
+    </script>
+</body>
+
+</html>

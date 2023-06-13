@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>API Response Example</title>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            color: #333333;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        
+        .input-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .input-container input {
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        
+        .input-container button {
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .results-container {
+            display: none;
+            /* Hide the results container by default */
+            max-width: 500px;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-container.show {
+            display: block;
+            /* Show the results container when 'show' class is applied */
+        }
+        
+        .results-container h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .results-container pre {
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .results-container button {
+            margin-bottom: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .results-container button:hover {
+            background-color: #45a049;
+        }
+        
+        .result-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .result-details h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .result-details p {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="input-container">
+            <input type="text" id="searchInput" placeholder="Enter search query">
+            <button onclick="fetchData()">Search</button>
+        </div>
+        <div class="results-container" id="results"></div>
+        <ul id="suggestions"></ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const url = 'https://api.edamam.com/api/food-database/v2/parser';
+        const appId = 'e5f0c4ee';
+        const appKey = 'd4f7ce72a2afe4d55b1c4073e577ced3';
+
+        const removeHtmlTags = (html) => {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            return div.textContent || div.innerText || '';
+        };
+
+        const roundToTwoDecimal = (value) => {
+            return Math.round(value * 100) / 100;
+        };
+
+        const fetchData = async() => {
+            const searchInput = document.getElementById('searchInput').value;
+
+            try {
+                const response = await axios.get(url, {
+                    params: {
+                        app_id: appId,
+                        app_key: appKey,
+                        ingr: searchInput
+                    }
+                });
+                const data = response.data;
+
+                if (data.hints.length > 0) {
+                    const resultsContainer = document.getElementById('results');
+                    resultsContainer.innerHTML = `<h2>Results</h2>`;
+
+                    data.hints.slice(0, 5).forEach((hint) => {
+                        const filteredData = {
+                            text: removeHtmlTags(hint.food.label),
+                            calories: roundToTwoDecimal(hint.food.nutrients.ENERC_KCAL),
+                            protein: roundToTwoDecimal(hint.food.nutrients.PROCNT),
+                            fat: roundToTwoDecimal(hint.food.nutrients.FAT),
+                            carbs: roundToTwoDecimal(hint.food.nutrients.CHOCDF)
+                        };
+
+                        const resultButton = document.createElement('button');
+                        resultButton.innerText = filteredData.text;
+                        resultButton.addEventListener('click', () => showFullData(filteredData));
+                        resultsContainer.appendChild(resultButton);
+                    });
+
+                    resultsContainer.classList.add('show'); // Apply 'show' class to display the results container
+                } else {
+                    console.log('No results found');
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        const showFullData = (data) => {
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = `
+        <div class="result-details">
+          <h2>${data.text}</h2>
+          <p>Calories: ${data.calories} kcal</p>
+          <p>Protein: ${data.protein} g</p>
+          <p>Fat: ${data.fat} g</p>
+          <p>Carbs: ${data.carbs} g</p>
+        </div>
+      `;
+        };
+    </script>
+</body>
+
+</html>
